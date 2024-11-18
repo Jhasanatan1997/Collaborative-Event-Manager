@@ -48,6 +48,15 @@ class InputDataError {
     }
 }
 
+
+class BadRequestError {
+    constructor(message) {
+        this.name = 'BadRequestError';
+        this.message = message || 'Invalid request. Please check your input and try again.';
+        this.status = 400;
+    }
+}
+
 class ExpectationFailedError {
     constructor(message) {
         this.name = 'ExpectationFailed';
@@ -63,5 +72,6 @@ module.exports = {
     Validation: ValidationError,
     DuplicateData: DuplicateDataError,
     InputData: InputDataError,
+    BadRequest: BadRequestError,
     ExpectationFailed :ExpectationFailedError
 };

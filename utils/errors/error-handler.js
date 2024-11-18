@@ -10,6 +10,7 @@ module.exports = function (err, req, res, next) {
         'HTSSOUnprocessedError',
         'DuplicateDataError',
         'InputDataError',
+        'BadRequestError',
         // 'PartialSuccessError',
         // 'ExpiredLink'
     ];
