@@ -6,7 +6,7 @@ const errorHandler = require('./utils/errors/error-handler');
 
 // Import routes
 const authRoutes = require("./routes/auth");
-// const eventRoutes = require("./routes/events");
+const eventRoutes = require("./routes/event");
 
 const app = express();
 
@@ -19,7 +19,7 @@ connectDB();
 
 // Routes
 app.use("/api/auth", authRoutes);
-// app.use("/api/events", eventRoutes);
+app.use("/api/events", eventRoutes);
 
 
 //error handler

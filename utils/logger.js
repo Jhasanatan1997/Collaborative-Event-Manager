@@ -1,13 +1,13 @@
 const appLogger = async (
     type,
-    email,
+    user,
     funcName,
     status,
     message = ''
 ) => {
     const insertLog = {
         type: type || 'info',
-        user: email || '',
+        user: user || '',
         functionName: funcName,
         status: status || '',
         message: JSON.stringify(message),
