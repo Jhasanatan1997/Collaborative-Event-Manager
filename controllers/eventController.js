@@ -1,8 +1,9 @@
 const Event = require("../models/Event");
 const logUtil = require('../utils/logger');
 const errors = require('../utils/errors/error');
-
-
+const { google } = require("googleapis");
+const googleAuth = require("../utils/googleAuth");
+const scheduleReminder = require("../utils/reminderScheduler");
 
 // Create a new event
 exports.createEvent = async (req) => {
@@ -211,7 +212,7 @@ exports.removeParticipant = async (req, userId) => {
 
 exports.addTask = async (req, res) => {
 
-    const { title, description, dueDate, assignedTo } = req.body;
+    const { title, description, dueDate, reminderTime, assignedTo } = req.body;
 
     try {
         const event = await Event.findById(req.params.id);
@@ -223,11 +224,23 @@ exports.addTask = async (req, res) => {
             throw new errors.BadRequest("Assigned user must be a participant in the event");
         }
 
-        const newTask = { title, description, dueDate, assignedTo };
-        event.tasks.push(newTask);
-        await event.save();
+        const newTask = new Task({
+            title,
+            description,
+            dueDate,
+            reminderTime,
+            assignedTo,
+            createdBy: req.user.id,
+        });
+        
+        const savedTask = await newTask.save();
 
-        return { message: "Task added successfully", task: newTask };
+        // Schedule a reminder if reminderTime is provided
+        if (reminderTime) {
+            scheduleReminder(savedTask._id, new Date(reminderTime), assignedTo);
+        }
+
+        return { message: "Task added successfully", task: savedTask };
 
     } catch (error) {
         logUtil.appLogger(
@@ -306,5 +319,38 @@ exports.getTasks = async (req, res) => {
             error.message
         );
         throw error;
+    }
+};
+
+
+
+
+exports.addToGoogleCalendar = async (req, res) => {
+
+    try {
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        const calendar = google.calendar({ version: "v3", auth: googleAuth });
+
+        const googleEvent = {
+            summary: event.title,
+            description: event.description,
+            start: { dateTime: event.startDate.toISOString() },
+            end: { dateTime: event.endDate.toISOString() },
+            attendees: event.participants.map((participant) => ({ email: participant.email })),
+        };
+
+        const response = await calendar.events.insert({
+            calendarId: "primary",
+            resource: googleEvent,
+        });
+
+        res.status(200).json({ message: "Event added to Google Calendar", data: response.data });
+    } catch (error) {
+        console.error("Error adding event to Google Calendar:", error);
+        res.status(500).json({ message: "Failed to add event to Google Calendar" });
     }
 };

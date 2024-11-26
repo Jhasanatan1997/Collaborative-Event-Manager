@@ -10,12 +10,13 @@ const {
     getParticipants,
     addTask,
     updateTask,
-    getTasks
+    getTasks,
+    addToGoogleCalendar
 } = require("../controllers/eventController");
 const { authMiddleware } = require("../utils/middleware");
 const mongoose = require("mongoose");
 const errors = require('../utils/errors/error');
-
+const googleAuth = require("../utils/googleAuth");
 
 const router = express.Router();
 
@@ -204,6 +205,22 @@ router.get('/:id/get-tasks', authMiddleware, async (req, res, next) => {
   }
 });
 
+
+
+router.post('/:id/google-calendar', authMiddleware, async (req, res, next) => {
+  try {
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      throw new errors.Validation("Invalid ID format");
+    }
+
+    const result = await addToGoogleCalendar(req);
+    res.status(200).json(result);
+
+  } catch (error) {
+    next(error);
+  }
+});
 
 
 module.exports = router;
